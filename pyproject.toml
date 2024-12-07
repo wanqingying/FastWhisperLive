@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-faster-whisper = "1.0.1"
+faster-whisper = "1.1.0"
 websockets = "^14.1"
 onnxruntime = "1.16.0"
 numba = "^0.60.0"
@@ -17,9 +17,9 @@ ffmpeg-python = "^0.2.0"
 scipy = "^1.14.1"
 jiwer = "^3.0.5"
 numpy = "<2"
-tiktoken = "0.3.3"
 evaluate = "^0.4.3"
-openai-whisper = "^20240930"
+openai-whisper = "20240930"
+tokenizers = "0.20.3"
 
 
 [build-system]
