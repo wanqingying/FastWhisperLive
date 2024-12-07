@@ -1,0 +1,51 @@
+name: push and deploy to aws dev-test
+on:
+  push:
+    branches: ['dev']
+
+env:
+  AWS_REGION: us-west-1 # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY: js-server # set this to your Amazon ECR repository name
+  IMAGE_TAG: wp-test # set this to your desired image tag
+#  CLUSTER_NAME: nestjs-server-test # set this to your ECS cluster name
+#  SERVICE_NAME: nestjs-app-test2 # set this to your ECS service name g
+#  NEST_APP_NAME: nest-web-api
+
+permissions:
+  contents: read
+
+jobs:
+  build-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+        run: |
+          docker build -f docker/Dockerfile.cpuv2 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --build-arg GITHUB_TOKEN=${{ secrets.PAT }} --build-arg NEST_APP_NAME=${{ env.NEST_APP_NAME }}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+#      - name: Update ECS service
+#        run: |
+#          aws ecs update-service --cluster ${{ env.CLUSTER_NAME }} --service ${{ env.SERVICE_NAME }} --force-new-deployment

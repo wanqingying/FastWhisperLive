@@ -255,6 +255,7 @@ class TranscriptionServer:
             return False
 
     def process_audio_frames(self, websocket):
+        # print("Processing audio frames")
         frame_np = self.get_audio_from_websocket(websocket)
         client = self.client_manager.get_client(websocket)
         if frame_np is False:
@@ -337,6 +338,7 @@ class TranscriptionServer:
             host (str): The host address to bind the server.
             port (int): The port number to bind the server.
         """
+        print(f"Starting server on {host}:{port}")
         if faster_whisper_custom_model_path is not None and not os.path.exists(faster_whisper_custom_model_path):
             raise ValueError(f"Custom faster_whisper model '{faster_whisper_custom_model_path}' is not a valid path.")
         if whisper_tensorrt_path is not None and not os.path.exists(whisper_tensorrt_path):
@@ -350,6 +352,7 @@ class TranscriptionServer:
                 logging.info("Single model mode currently only works with custom models.")
         if not BackendType.is_valid(backend):
             raise ValueError(f"{backend} is not a valid backend type. Choose backend from {BackendType.valid_types()}")
+        print(f"Using backend: {backend}")
         with serve(
             functools.partial(
                 self.recv_audio,
@@ -763,7 +766,7 @@ class ServeClientFasterWhisper(ServeClientBase):
     SINGLE_MODEL = None
     SINGLE_MODEL_LOCK = threading.Lock()
 
-    def __init__(self, websocket, task="transcribe", device=None, language=None, client_uid=None, model="small.en",
+    def __init__(self, websocket, task="transcribe", device=None, language=None, client_uid=None, model="base",
                  initial_prompt=None, vad_parameters=None, use_vad=True, single_model=False):
         """
         Initialize a ServeClient instance.
@@ -807,7 +810,7 @@ class ServeClientFasterWhisper(ServeClientBase):
         if self.model_size_or_path is None:
             return
         logging.info(f"Using Device={device} with precision {self.compute_type}")
-    
+
         try:
             if single_model:
                 if ServeClientFasterWhisper.SINGLE_MODEL is None:
@@ -846,6 +849,7 @@ class ServeClientFasterWhisper(ServeClientBase):
         """
         Instantiates a new model, sets it as the transcriber.
         """
+        print(f"Creating model with size: {self.model_size_or_path}")
         self.transcriber = WhisperModel(
             self.model_size_or_path,
             device=device,
@@ -1003,6 +1007,7 @@ class ServeClientFasterWhisper(ServeClientBase):
                 time.sleep(0.1)     # wait for audio chunks to arrive
                 continue
             try:
+                start_time = time.time()
                 input_sample = input_bytes.copy()
                 result = self.transcribe_audio(input_sample)
 
@@ -1011,6 +1016,10 @@ class ServeClientFasterWhisper(ServeClientBase):
                     time.sleep(0.25)    # wait for voice activity, result is None when no voice activity
                     continue
                 self.handle_transcription_output(result, duration)
+                end_time = time.time()
+                elapsed_time = (end_time - start_time) * 1000  # 转换为毫秒
+                print(f"模型运行花费的时间: {elapsed_time:.2f} 毫秒")
+
 
             except Exception as e:
                 logging.error(f"[ERROR]: Failed to transcribe audio chunk: {e}")
@@ -1092,7 +1101,7 @@ class ServeClientFasterWhisper(ServeClientBase):
             time.sleep(0.1)     # wait for some voice activity just in case there is an unitended pause from the speaker for better punctuations.
         else:
             self.same_output_count = 0
-        
+
         # if same incomplete segment is seen multiple times then update the offset
         # and append the segment to the list
         if self.same_output_count > self.same_output_threshold:

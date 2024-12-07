@@ -1,5 +1,23 @@
 import argparse
 import os
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
+
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/health':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(b'{"status": "healthy"}')
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+def run_health_check_server(port):
+    server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+    print(f"Health check server started on port {port}")
+    server.serve_forever()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -29,6 +47,12 @@ if __name__ == "__main__":
                         action='store_true',
                         help='Set this if every connection should instantiate its own model. Only relevant for custom model, passed using -trt or -fw.')
     args = parser.parse_args()
+    print("Server started on port", args.port)
+    health_check_port = args.port + 1
+    health_check_thread = threading.Thread(target=run_health_check_server, args=(health_check_port,))
+    health_check_thread.daemon = True
+    health_check_thread.start()
+    print(f"Health check server started on port {health_check_port}")
 
     if args.backend == "tensorrt":
         if args.trt_model_path is None:
@@ -48,3 +72,4 @@ if __name__ == "__main__":
         trt_multilingual=args.trt_multilingual,
         single_model=not args.no_single_model,
     )
+

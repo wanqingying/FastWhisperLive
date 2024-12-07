@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "whisperlive"
+version = "0.1.0"
+description = ""
+authors = ["wanqingying <qingying.wan@finalroundai.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+faster-whisper = "1.0.1"
+websockets = "^14.1"
+onnxruntime = "1.16.0"
+numba = "^0.60.0"
+kaldialign = "^0.9.1"
+soundfile = "^0.12.1"
+ffmpeg-python = "^0.2.0"
+scipy = "^1.14.1"
+jiwer = "^3.0.5"
+numpy = "<2"
+tiktoken = "0.3.3"
+evaluate = "^0.4.3"
+openai-whisper = "^20240930"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

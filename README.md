@@ -180,3 +180,5 @@ We are available to help you with both Open Source and proprietary AI projects. 
   howpublished = {\url{https://github.com/snakers4/silero-vad}},
   email = {hello@silero.ai}
 }
+
+poetry run python run_server.py

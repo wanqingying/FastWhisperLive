@@ -121,6 +121,8 @@ class VoiceActivityDetector:
         Args:
             threshold (float, optional): The probability threshold for detecting voice activity. Defaults to 0.5.
         """
+        # print threshold
+        print(f"Threshold: {threshold}")
         self.model = VoiceActivityDetection()
         self.threshold = threshold
         self.frame_rate = frame_rate
