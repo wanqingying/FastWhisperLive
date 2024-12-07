@@ -1,0 +1,5 @@
+__pycache__/*
+/whisper_live/__pycache__
+
+.idea
+.idea/*
